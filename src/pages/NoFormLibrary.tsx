@@ -1,14 +1,23 @@
-import { useState } from 'react';
-import type { ProductPayload } from './../types';
+import { useState } from "react";
+import type { ProductPayload } from "./../types";
 
 type Errors = Partial<Record<keyof ProductPayload, string>>;
 
 const initialState: ProductPayload = {
-  title: '',
+  name: "",
   price: 0,
-  description: '',
-  category: '',
-  image: '',
+  featured: false,
+  images: "",
+  published: false,
+  quantity: 0,
+  barcode: null,
+  category: null,
+  compareAtPrice: null,
+  description: null,
+  isDefault: null,
+  owner: null,
+  sku: null,
+  tags: null,
 };
 
 const NoFormLibrary: React.FC = () => {
@@ -16,54 +25,100 @@ const NoFormLibrary: React.FC = () => {
   const [errors, setErrors] = useState<Errors>({});
 
   const validate = (): boolean => {
-    const newErrors: Errors = {};
+    const e: Errors = {};
 
-    if (!form.title) newErrors.title = 'Title is required';
-    if (!form.description) newErrors.description = 'Description is required';
-    if (!form.category) newErrors.category = 'Category is required';
-    if (!form.image) newErrors.image = 'Image URL is required';
-    if (!form.price || form.price <= 0)
-      newErrors.price = 'Price must be greater than zero';
+    if (!form.name || form.name.length < 1)
+      e.name = "Name is required";
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    if (form.name.length > 500)
+      e.name = "Name must not exceed 500 characters";
 
-  const handleChange = (key: keyof ProductPayload, value: string) => {
-    setForm({
-      ...form,
-      [key]: key === 'price' ? Number(value) : value,
-    });
+    if (form.price < 0)
+      e.price = "Price must be ≥ 0";
+
+    if (!form.images)
+      e.images = "Images field is required";
+
+    if (form.quantity < 0)
+      e.quantity = "Quantity must be ≥ 0";
+
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
-    await fetch('https://api.oluwasetemi.dev/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    await fetch("https://api.oluwasetemi.dev/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
 
-    alert('Product created');
+    alert("Product created");
     setForm(initialState);
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      {(Object.keys(form) as (keyof ProductPayload)[]).map((key) => (
-        <div key={key} style={{ marginBottom: 8 }}>
-          <input
-            placeholder={key}
-            type={key === 'price' ? 'number' : 'text'}
-            value={form[key]}
-            onChange={(e) => handleChange(key, e.target.value)}
-          />
-          <div style={{ color: 'red' }}>{errors[key]}</div>
-        </div>
-      ))}
-      <button type="submit">Create</button>
+      <input
+        placeholder="Name"
+        value={form.name}
+        onChange={(e) => setForm({ ...form, name: e.target.value })}
+      />
+      <p>{errors.name}</p>
+
+      <input
+        type="number"
+        placeholder="Price"
+        value={form.price}
+        onChange={(e) =>
+          setForm({ ...form, price: Number(e.target.value) })
+        }
+      />
+      <p>{errors.price}</p>
+
+      <input
+        placeholder="Images"
+        value={form.images}
+        onChange={(e) => setForm({ ...form, images: e.target.value })}
+      />
+      <p>{errors.images}</p>
+
+      <input
+        type="number"
+        placeholder="Quantity"
+        value={form.quantity}
+        onChange={(e) =>
+          setForm({ ...form, quantity: Number(e.target.value) })
+        }
+      />
+      <p>{errors.quantity}</p>
+
+      <label>
+        Featured
+        <input
+          type="checkbox"
+          checked={form.featured}
+          onChange={(e) =>
+            setForm({ ...form, featured: e.target.checked })
+          }
+        />
+      </label>
+
+      <label>
+        Published
+        <input
+          type="checkbox"
+          checked={form.published}
+          onChange={(e) =>
+            setForm({ ...form, published: e.target.checked })
+          }
+        />
+      </label>
+
+      <button type="submit">Create Product</button>
     </form>
   );
 };
